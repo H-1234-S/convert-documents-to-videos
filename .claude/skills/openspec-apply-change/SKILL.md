@@ -67,28 +67,75 @@ Implement tasks from an OpenSpec change.
    - Remaining tasks overview
    - Dynamic instruction from CLI
 
+---
+
+## 🛑 CHECKPOINT: BEFORE STARTING IMPLEMENTATION
+
+**You are about to enter Step 6 (Implementation). STOP HERE.**
+
+**Execute this mandatory checklist:**
+
+```
+[ ] Count remaining tasks (N = ?)
+[ ] If N >= 3 independent tasks → Load `dispatching-parallel-agents` skill
+[ ] If following a detailed plan → Load `executing-plans` skill  
+[ ] For EACH task about to implement → Load `test-driven-development` skill
+[ ] Confirm: No code will be written before tests are written
+```
+
+**Only proceed to Step 6 after completing this checklist.**
+
+---
+
 6. **Implement tasks (loop until done or blocked)**
 
-   For each pending task:
+   **⚠️ MANDATORY CHECK BEFORE ANY IMPLEMENTATION:**
+   
+   **STOP. You MUST check and load applicable Superpowers skills BEFORE writing ANY code:**
+   
+   1. **Count remaining tasks:**
+      - If 3+ independent tasks exist → **INVOKE `dispatching-parallel-agents` skill NOW**
+      - If following a detailed plan with subtasks → **INVOKE `executing-plans` skill NOW**
+   
+   2. **For each task you're about to implement:**
+      - If implementing new functionality or fixing bugs → **INVOKE `test-driven-development` skill NOW**
+      - **Write the test FIRST, then implement**
+   
+   **Do NOT proceed with implementation until you have loaded and followed the appropriate skill.**
+   
+   ---
+   
+   After loading required skills, for each pending task:
    - Show which task is being worked on
+   - **Apply TDD workflow if implementing features** (write test first, then code)
    - Make the code changes required
    - Keep changes minimal and focused
    - Mark task complete in the tasks file: `- [ ]` → `- [x]`
    - Continue to next task
 
-   **Pause if:**
+   **Pause and invoke skills if:**
    - Task is unclear → ask for clarification
    - Implementation reveals a design issue → suggest updating artifacts
-   - Error or blocker encountered → report and wait for guidance
+   - **Bug/test failure/unexpected behavior encountered → STOP and invoke `systematic-debugging` skill**
+   - **Runtime error or exception → STOP and invoke `systematic-debugging` skill**
    - User interrupts
+   
+   **After resolving issues via skills:**
+   - Return to this workflow
+   - Continue from where you paused
 
 7. **On completion or pause, show status**
 
    Display:
    - Tasks completed this session
    - Overall progress: "N/M tasks complete"
-   - If all done: suggest archive
+   - If all done: **Invoke `verification-before-completion` skill, then suggest archive**
    - If paused: explain why and wait for guidance
+   
+   **Before claiming completion:**
+   - Run tests to verify all passing
+   - Check for regressions
+   - Verify the implementation matches requirements
 
 **Output During Implementation**
 
@@ -148,8 +195,16 @@ What would you like to do?
 - If implementation reveals issues, pause and suggest artifact updates
 - Keep code changes minimal and scoped to each task
 - Update task checkbox immediately after completing each task
-- Pause on errors, blockers, or unclear requirements - don't guess
+- **CRITICAL: On any error, bug, or test failure → immediately invoke `systematic-debugging` skill**
+- **CRITICAL: Before claiming "done" → invoke `verification-before-completion` skill**
 - Use contextFiles from CLI output, don't assume specific file names
+
+**Superpowers Integration**
+This skill integrates with the Superpowers skill system:
+- **Pre-implementation**: Check for `test-driven-development`, `dispatching-parallel-agents`, `executing-plans`
+- **During implementation**: Auto-invoke `systematic-debugging` on any error/failure
+- **Post-implementation**: Auto-invoke `verification-before-completion` before marking complete
+- **Never guess or skip skill invocation** - if a scenario matches, the skill MUST be loaded
 
 **Fluid Workflow Integration**
 

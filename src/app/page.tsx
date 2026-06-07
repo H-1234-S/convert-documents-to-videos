@@ -1,8 +1,45 @@
+"use client";
+
 import Image from "next/image";
+import Link from "next/link";
+import { useSession } from "@/lib/auth-client";
+import { Button } from "@/components/ui/button";
 
 export default function Home() {
+  const { data: session, isPending } = useSession();
+
   return (
     <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+      <header className="fixed top-0 right-0 p-4 z-10">
+        {isPending ? (
+          <div className="h-10 w-32 bg-gray-200 dark:bg-gray-800 animate-pulse rounded" />
+        ) : session ? (
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-gray-700 dark:text-gray-300">
+              {session.user.name || session.user.email}
+            </span>
+            <Link href="/profile">
+              <Button variant="outline" size="sm">
+                个人中心
+              </Button>
+            </Link>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3">
+            <Link href="/login">
+              <Button variant="outline" size="sm">
+                登录
+              </Button>
+            </Link>
+            <Link href="/signup">
+              <Button size="sm">
+                注册
+              </Button>
+            </Link>
+          </div>
+        )}
+      </header>
+
       <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
         <Image
           className="dark:invert"
