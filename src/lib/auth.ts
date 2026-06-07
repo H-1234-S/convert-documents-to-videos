@@ -11,4 +11,12 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true, //开启邮箱密码认证
   },
+  socialProviders: {
+    wechat: {
+      clientId: process.env.WECHAT_CLIENT_ID!,
+      clientSecret: process.env.WECHAT_CLIENT_SECRET!,
+      lang: "cn",
+      scope:['snsapi_login']
+    },
+  },
 });
