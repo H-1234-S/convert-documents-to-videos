@@ -6,6 +6,10 @@ import {
   QuotaExceededError,
   ConcurrentLimitError,
   DuplicateRequestError,
+  listProjects,
+  getProjectById,
+  ProjectNotFoundError,
+  ProjectAccessDeniedError,
 } from "../services/project.service";
 import { sendGenerateRequested } from "@/inngest/client";
 
@@ -31,6 +35,42 @@ export const createProjectInputSchema = z.object({
 
 /** CreateProjectInput 类型 */
 export type CreateProjectInput = z.infer<typeof createProjectInputSchema>;
+
+// ---- List / GetById Schemas ----
+
+/**
+ * Project 的有效状态值，与 `prisma/schema.prisma` 中 Project.status 注释保持同步：
+ * queued, generating_storyboard, storyboard_ready, generating_audio,
+ * calculating_timeline, rendering, completed, failed, cancelled
+ */
+const VALID_PROJECT_STATUSES = [
+  "queued",
+  "generating_storyboard",
+  "storyboard_ready",
+  "generating_audio",
+  "calculating_timeline",
+  "rendering",
+  "completed",
+  "failed",
+  "cancelled",
+] as const;
+
+/** project.list 分页查询输入 */
+export const listProjectsInputSchema = z.object({
+  cursor: z.string().optional(),
+  pageSize: z.number().int().min(1).max(50).default(12),
+  status: z.enum(VALID_PROJECT_STATUSES).optional(),
+});
+
+/** project.getById 输入 */
+export const getProjectByIdInputSchema = z.object({
+  // CUID 格式校验：projectId 是 CUID 而非 UUID，不能用 .uuid()
+  projectId: z
+    .string()
+    .min(1, "projectId 不能为空")
+    .max(50, "projectId 长度不能超过 50")
+    .regex(/^[a-zA-Z0-9_-]+$/, "projectId 格式无效"),
+});
 
 // ---- Router ----
 
@@ -90,6 +130,65 @@ export const projectRouter = router({
         }
 
         // 未知错误
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    }),
+
+  /**
+   * 查询用户的项目列表（cursor-based 分页 + 按 status 筛选）。
+   *
+   * 仅返回当前用户自己的项目。admin 不特殊——admin 也按 userId 隔离列表。
+   */
+  list: protectedProcedure
+    .input(listProjectsInputSchema)
+    .query(async ({ ctx, input }) => {
+      try {
+        return await listProjects(ctx.userId, input);
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    }),
+
+  /**
+   * 按 projectId 查询项目完整详情。
+   *
+   * 权限：owner 或 admin 可查看。
+   * 响应中不包含 userId 字段（router 层剔除）。
+   */
+  getById: protectedProcedure
+    .input(getProjectByIdInputSchema)
+    .query(async ({ ctx, input }) => {
+      try {
+        const detail = await getProjectById(
+          input.projectId,
+          ctx.userId,
+          ctx.isAdmin,
+        );
+        // 剔除 userId，确保不泄露给前端
+        const { userId: _unused, ...publicDetail } = detail;
+        void _unused;
+        return publicDetail;
+      } catch (error) {
+        if (error instanceof ProjectNotFoundError) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: `[PROJECT_NOT_FOUND] 项目不存在 | projectId: ${error.projectId}`,
+          });
+        }
+
+        if (error instanceof ProjectAccessDeniedError) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: `[PROJECT_ACCESS_DENIED] 无权访问该项目 | projectId: ${error.projectId}`,
+          });
+        }
+
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: error instanceof Error ? error.message : "Unknown error",
