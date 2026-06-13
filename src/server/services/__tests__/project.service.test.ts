@@ -7,6 +7,10 @@ import {
   QuotaExceededError,
   ConcurrentLimitError,
   DuplicateRequestError,
+  listProjects,
+  getProjectById,
+  ProjectNotFoundError,
+  ProjectAccessDeniedError,
 } from "../project.service";
 import type { CreateProjectInput } from "../project.service";
 
@@ -34,6 +38,16 @@ vi.mock("@/lib/db/client", () => ({
     },
   },
 }));
+
+// Mock repo layer for list/getById tests
+const { mockRepo } = vi.hoisted(() => ({
+  mockRepo: {
+    findProjectsPaginated: vi.fn(),
+    findProjectDetailById: vi.fn(),
+  },
+}));
+
+vi.mock("@/lib/db/repositories/project.repo", () => mockRepo);
 
 // Import mocked prisma
 const { prisma } = await import("@/lib/db/client");
@@ -249,5 +263,100 @@ describe("createProject", () => {
     ).rejects.toThrow(Prisma.PrismaClientKnownRequestError);
 
     // Prisma $transaction 在内部函数抛错时会回滚，这里验证错误被正确传播
+  });
+});
+
+// ---- listProjects tests ----
+
+describe("listProjects", () => {
+
+  it("应正确委托 repo.findProjectsPaginated", async () => {
+    const expectedResult = {
+      items: [],
+      nextCursor: null,
+      total: 0,
+    };
+    mockRepo.findProjectsPaginated.mockResolvedValue(expectedResult);
+
+    const result = await listProjects(TEST_USER_ID, { pageSize: 24, status: "completed" });
+
+    expect(mockRepo.findProjectsPaginated).toHaveBeenCalledWith(TEST_USER_ID, {
+      pageSize: 24,
+      status: "completed",
+    });
+    expect(result).toEqual(expectedResult);
+  });
+
+  it("参数应原样透传（userId + options）", async () => {
+    mockRepo.findProjectsPaginated.mockResolvedValue({ items: [], nextCursor: null, total: 0 });
+
+    await listProjects(TEST_USER_ID);
+
+    expect(mockRepo.findProjectsPaginated).toHaveBeenCalledWith(TEST_USER_ID, {});
+  });
+});
+
+// ---- getProjectById tests ----
+
+describe("getProjectById", () => {
+  const OTHER_USER_ID = "user-other-456";
+
+  const mockDetail = {
+    id: "proj-1",
+    userId: TEST_USER_ID,
+    title: "Test",
+    sourceText: "Hello",
+    status: "completed",
+    audienceRole: null,
+    audienceLevel: null,
+    aspectRatio: "16:9",
+    targetDurationSec: 120,
+    voiceProvider: null,
+    voiceId: null,
+    errorCode: null,
+    errorMessage: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    currentJob: null,
+    currentStoryboardVersion: null,
+  };
+
+  it("owner 可查看自己的项目", async () => {
+    mockRepo.findProjectDetailById.mockResolvedValue(mockDetail);
+
+    const result = await getProjectById("proj-1", TEST_USER_ID, false);
+
+    expect(result).toEqual(mockDetail);
+  });
+
+  it("admin 可查看他人的项目", async () => {
+    mockRepo.findProjectDetailById.mockResolvedValue({
+      ...mockDetail,
+      userId: OTHER_USER_ID,
+    });
+
+    const result = await getProjectById("proj-1", TEST_USER_ID, true);
+
+    expect(result).not.toBeNull();
+    expect(result.userId).toBe(OTHER_USER_ID);
+  });
+
+  it("非 owner 非 admin 应抛 ProjectAccessDeniedError", async () => {
+    mockRepo.findProjectDetailById.mockResolvedValue({
+      ...mockDetail,
+      userId: OTHER_USER_ID,
+    });
+
+    await expect(
+      getProjectById("proj-1", TEST_USER_ID, false),
+    ).rejects.toThrow(ProjectAccessDeniedError);
+  });
+
+  it("项目不存在应抛 ProjectNotFoundError", async () => {
+    mockRepo.findProjectDetailById.mockResolvedValue(null);
+
+    await expect(
+      getProjectById("nonexistent", TEST_USER_ID, false),
+    ).rejects.toThrow(ProjectNotFoundError);
   });
 });

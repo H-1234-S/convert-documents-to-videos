@@ -1,5 +1,14 @@
 import { Prisma } from "@/generated/prisma/client";
 import { checkDailyQuota } from "./quota.service";
+import {
+  findProjectsPaginated,
+  findProjectDetailById,
+} from "@/lib/db/repositories/project.repo";
+import type {
+  ListProjectsOptions,
+  ProjectListResult,
+  ProjectDetailResult,
+} from "@/lib/db/repositories/project.repo";
 
 // ---- Types ----
 
@@ -59,6 +68,24 @@ export class DuplicateRequestError extends Error {
   ) {
     super(message);
     this.name = "DuplicateRequestError";
+  }
+}
+
+/** 项目不存在 */
+export class ProjectNotFoundError extends Error {
+  public readonly code = "PROJECT_NOT_FOUND";
+  constructor(public readonly projectId: string) {
+    super(`[PROJECT_NOT_FOUND] 项目不存在 | projectId: ${projectId}`);
+    this.name = "ProjectNotFoundError";
+  }
+}
+
+/** 无权访问项目 */
+export class ProjectAccessDeniedError extends Error {
+  public readonly code = "PROJECT_ACCESS_DENIED";
+  constructor(public readonly projectId: string) {
+    super(`[PROJECT_ACCESS_DENIED] 无权访问该项目 | projectId: ${projectId}`);
+    this.name = "ProjectAccessDeniedError";
   }
 }
 
@@ -266,4 +293,53 @@ export async function createProject(
     }
     throw error;
   }
+}
+
+/**
+ * 查询用户的项目列表（分页 + 可选 status 筛选）。
+ *
+ * 直接委托 repo 层 `findProjectsPaginated`，当前无额外业务逻辑。
+ * 后续可在此层添加缓存、日志或聚合逻辑。
+ *
+ * @param userId - 当前用户 ID
+ * @param options - 分页和筛选选项
+ * @returns ProjectListResult
+ */
+export async function listProjects(
+  userId: string,
+  options: ListProjectsOptions = {},
+): Promise<ProjectListResult> {
+  return findProjectsPaginated(userId, options);
+}
+
+/**
+ * 按 projectId 查询项目完整详情，含权限校验。
+ *
+ * 查询流程：
+ * 1. 调用 repo 层 `findProjectDetailById` 查询包含 userId 的完整记录
+ * 2. 不存在 → 抛 `ProjectNotFoundError`
+ * 3. 非 owner 且非 admin → 抛 `ProjectAccessDeniedError`
+ * 4. 通过 → 返回完整详情（含 userId 供 router 层决定是否剔除）
+ *
+ * @param projectId - 项目 ID
+ * @param userId - 当前用户 ID
+ * @param isAdmin - 是否为 admin
+ * @returns ProjectDetailResult（含 userId，仅用于服务端权限判断）
+ */
+export async function getProjectById(
+  projectId: string,
+  userId: string,
+  isAdmin: boolean,
+): Promise<ProjectDetailResult> {
+  const project = await findProjectDetailById(projectId);
+
+  if (!project) {
+    throw new ProjectNotFoundError(projectId);
+  }
+
+  if (project.userId !== userId && !isAdmin) {
+    throw new ProjectAccessDeniedError(projectId);
+  }
+
+  return project;
 }

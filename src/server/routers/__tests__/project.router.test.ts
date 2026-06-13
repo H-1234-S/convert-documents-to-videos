@@ -10,6 +10,11 @@ vi.mock("@/lib/db/client", () => ({
     generationJob: {
       findUnique: vi.fn(),
     },
+    project: {
+      findMany: vi.fn(),
+      count: vi.fn(),
+      findUnique: vi.fn(),
+    },
   },
 }));
 
@@ -289,5 +294,238 @@ describe("project.createAndGenerate", () => {
       projectId: "project-inngest-fail",
       jobId: "job-inngest-fail",
     });
+  });
+});
+
+// ---- project.list tests ----
+
+describe("project.list", () => {
+  it("未认证用户应返回 UNAUTHORIZED", async () => {
+    const caller = createCaller(createAnonCtx());
+
+    await expect(caller.project.list({})).rejects.toMatchObject({
+      code: "UNAUTHORIZED",
+    });
+  });
+
+  it("正常返回分页列表", async () => {
+    const caller = createCaller(createUserCtx());
+    const mockDate = new Date("2026-06-13T08:00:00.000Z");
+
+    (mockPrisma.project.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
+      {
+        id: "proj-1",
+        title: "Test Project",
+        status: "completed",
+        aspectRatio: "16:9",
+        targetDurationSec: 120,
+        createdAt: mockDate,
+        updatedAt: mockDate,
+        generationJobs: [
+          { id: "job-1", jobType: "storyboard", status: "completed" },
+        ],
+      },
+    ]);
+    (mockPrisma.project.count as ReturnType<typeof vi.fn>).mockResolvedValue(1);
+
+    const result = await caller.project.list({});
+
+    expect(result.items).toHaveLength(1);
+    expect(result.total).toBe(1);
+    expect(result.items[0].id).toBe("proj-1");
+    expect(result.items[0].currentJob).not.toBeNull();
+  });
+
+  it("空列表应返回空 items", async () => {
+    const caller = createCaller(createUserCtx());
+
+    (mockPrisma.project.findMany as ReturnType<typeof vi.fn>).mockResolvedValue(
+      [],
+    );
+    (mockPrisma.project.count as ReturnType<typeof vi.fn>).mockResolvedValue(0);
+
+    const result = await caller.project.list({});
+
+    expect(result.items).toEqual([]);
+    expect(result.nextCursor).toBeNull();
+    expect(result.total).toBe(0);
+  });
+
+  it("status 筛选应正确传递", async () => {
+    const caller = createCaller(createUserCtx());
+
+    (mockPrisma.project.findMany as ReturnType<typeof vi.fn>).mockResolvedValue(
+      [],
+    );
+    (mockPrisma.project.count as ReturnType<typeof vi.fn>).mockResolvedValue(0);
+
+    await caller.project.list({ status: "failed" });
+
+    const findManyCall = (
+      mockPrisma.project.findMany as ReturnType<typeof vi.fn>
+    ).mock.calls[0]?.[0];
+    expect(findManyCall.where).toMatchObject({ status: "failed" });
+  });
+
+  it("无效 pageSize（>50）应返回 BAD_REQUEST", async () => {
+    const caller = createCaller(createUserCtx());
+
+    await expect(
+      caller.project.list({ pageSize: 100 }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+  });
+
+  it("无效 status 应返回 BAD_REQUEST", async () => {
+    const caller = createCaller(createUserCtx());
+
+    await expect(
+      caller.project.list({ status: "invalid_status" as never }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+  });
+});
+
+// ---- project.getById tests ----
+
+describe("project.getById", () => {
+  const mockDate = new Date("2026-06-13T08:00:00.000Z");
+
+  function mockDetailRow(overrides: Record<string, unknown> = {}) {
+    return {
+      id: "proj-1",
+      userId: "user-test-1",
+      title: "Test Project",
+      sourceText: "Full source text...",
+      status: "completed",
+      audienceRole: "student",
+      audienceLevel: "intermediate",
+      aspectRatio: "16:9",
+      targetDurationSec: 120,
+      voiceProvider: "minimax",
+      voiceId: "male-qn-qingse",
+      errorCode: null,
+      errorMessage: null,
+      createdAt: mockDate,
+      updatedAt: mockDate,
+      generationJobs: [
+        {
+          id: "job-1",
+          jobType: "storyboard",
+          status: "completed",
+          aiProvider: "deepseek",
+          aiModel: "deepseek-chat",
+          errorCode: null,
+          errorMessage: null,
+          startedAt: mockDate,
+          completedAt: mockDate,
+          createdAt: mockDate,
+        },
+      ],
+      currentStoryboardVersion: {
+        id: "sv-1",
+        versionNumber: 1,
+        totalDurationSec: 115.5,
+        scenes: [
+          {
+            id: "scene-1",
+            order: 1,
+            narrationText: "Narration...",
+            visualDescription: "Visual...",
+            emotionalTone: "neutral",
+            animationPreset: "fadeIn",
+            durationSec: 15.2,
+            startTimeSec: 0,
+            audioAssetId: "asset-audio-1",
+            imageAssetId: null,
+          },
+        ],
+      },
+      ...overrides,
+    };
+  }
+
+  it("未认证用户应返回 UNAUTHORIZED", async () => {
+    const caller = createCaller(createAnonCtx());
+
+    await expect(
+      caller.project.getById({ projectId: "proj-1" }),
+    ).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+  });
+
+  it("owner 可查看自己的项目", async () => {
+    const caller = createCaller(createUserCtx());
+
+    (mockPrisma.project.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockDetailRow(),
+    );
+
+    const result = await caller.project.getById({ projectId: "proj-1" });
+
+    expect(result.id).toBe("proj-1");
+    expect(result.title).toBe("Test Project");
+    expect(result.sourceText).toBe("Full source text...");
+    // userId 不应泄露
+    expect((result as Record<string, unknown>).userId).toBeUndefined();
+    expect(result.currentJob).not.toBeNull();
+    expect(result.currentStoryboardVersion).not.toBeNull();
+  });
+
+  it("非 owner 应返回 FORBIDDEN", async () => {
+    const caller = createCaller(createUserCtx());
+
+    (mockPrisma.project.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockDetailRow({ userId: "other-user" }),
+    );
+
+    await expect(
+      caller.project.getById({ projectId: "proj-1" }),
+    ).rejects.toMatchObject({
+      code: "FORBIDDEN",
+      message: expect.stringContaining("[PROJECT_ACCESS_DENIED]"),
+    });
+  });
+
+  it("admin 可查看他人项目返回 200", async () => {
+    const caller = createCaller(createUserCtx({ isAdmin: true }));
+
+    (mockPrisma.project.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(
+      mockDetailRow({ userId: "other-user" }),
+    );
+
+    const result = await caller.project.getById({ projectId: "proj-1" });
+
+    expect(result.id).toBe("proj-1");
+    // userId 不应泄露给前端
+    expect((result as Record<string, unknown>).userId).toBeUndefined();
+  });
+
+  it("不存在的 projectId 应返回 NOT_FOUND", async () => {
+    const caller = createCaller(createUserCtx());
+
+    (mockPrisma.project.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(
+      null,
+    );
+
+    await expect(
+      caller.project.getById({ projectId: "nonexistent" }),
+    ).rejects.toMatchObject({
+      code: "NOT_FOUND",
+      message: expect.stringContaining("[PROJECT_NOT_FOUND]"),
+    });
+  });
+
+  it("projectId 为空字符串应返回 BAD_REQUEST", async () => {
+    const caller = createCaller(createUserCtx());
+
+    await expect(
+      caller.project.getById({ projectId: "" }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+  });
+
+  it("无效 projectId 格式应返回 BAD_REQUEST", async () => {
+    const caller = createCaller(createUserCtx());
+
+    await expect(
+      caller.project.getById({ projectId: "<script>" }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
   });
 });
