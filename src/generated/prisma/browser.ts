@@ -37,3 +37,43 @@ export type Account = Prisma.AccountModel
  * 
  */
 export type Verification = Prisma.VerificationModel
+/**
+ * Model Project
+ * 
+ */
+export type Project = Prisma.ProjectModel
+/**
+ * Model StoryboardVersion
+ * 
+ */
+export type StoryboardVersion = Prisma.StoryboardVersionModel
+/**
+ * Model Scene
+ * 
+ */
+export type Scene = Prisma.SceneModel
+/**
+ * Model Asset
+ * 
+ */
+export type Asset = Prisma.AssetModel
+/**
+ * Model GenerationJob
+ * 
+ */
+export type GenerationJob = Prisma.GenerationJobModel
+/**
+ * Model RenderJob
+ * 
+ */
+export type RenderJob = Prisma.RenderJobModel
+/**
+ * Model JobEvent
+ * 
+ */
+export type JobEvent = Prisma.JobEventModel
+/**
+ * Model UsageRecord
+ * 
+ */
+export type UsageRecord = Prisma.UsageRecordModel

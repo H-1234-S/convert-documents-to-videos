@@ -3,6 +3,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { PrismaClient } from '@/generated/prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { Resend } from 'resend'
+import { env } from "@/lib/env";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL })
 const prisma = new PrismaClient({ adapter });
@@ -137,3 +138,17 @@ export const auth = betterAuth({
     },
   },
 });
+
+// Admin Authorization Helpers
+
+export function isAdminEmail(email: string): boolean {
+  const normalizedEmail = email.trim().toLowerCase();
+  return env.ADMIN_EMAILS.includes(normalizedEmail);
+}
+
+export function isAdminSession(session: { user?: { email?: string } } | null): boolean {
+  if (!session?.user?.email) {
+    return false;
+  }
+  return isAdminEmail(session.user.email);
+}

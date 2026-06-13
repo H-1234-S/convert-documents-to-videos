@@ -23,6 +23,12 @@ model User {
   sessions      Session[]
   accounts      Account[]
 
+  // Business relations
+  projects       Project[]
+  assets         Asset[]
+  generationJobs GenerationJob[]
+  usageRecords   UsageRecord[]
+
   @@unique([email])
   @@map("user")
 }
@@ -74,3 +80,197 @@ model Verification {
   @@index([identifier])
   @@map("verification")
 }
+
+// Business Models
+
+model Project {
+  id                         String              @id @default(cuid())
+  userId                     String
+  user                       User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title                      String
+  sourceText                 String              @db.Text
+  status                     String              @default("draft") // draft, queued, generating_storyboard, storyboard_ready, generating_audio, calculating_timeline, rendering, completed, failed, cancelled
+  audienceRole               String?
+  audienceLevel              String?
+  aspectRatio                String              @default("16:9") // 16:9, 9:16, 1:1
+  targetDurationSec          Int?
+  voiceProvider              String?             // minimax, elevenlabs, etc
+  voiceId                    String?
+  currentStoryboardVersionId String?             @unique
+  currentStoryboardVersion   StoryboardVersion?  @relation("CurrentStoryboard", fields: [currentStoryboardVersionId], references: [id], onDelete: SetNull)
+  finalVideoAssetId          String?             @unique
+  finalVideoAsset            Asset?              @relation("FinalVideo", fields: [finalVideoAssetId], references: [id], onDelete: SetNull)
+  thumbnailAssetId           String?             @unique
+  thumbnailAsset             Asset?              @relation("Thumbnail", fields: [thumbnailAssetId], references: [id], onDelete: SetNull)
+  errorCode                  String?
+  errorMessage               String?             @db.Text
+  createdAt                  DateTime            @default(now())
+  updatedAt                  DateTime            @updatedAt
+  storyboardVersions         StoryboardVersion[] @relation("ProjectStoryboards")
+  generationJobs             GenerationJob[]
+  renderJobs                 RenderJob[]
+
+  @@index([userId, createdAt])
+  @@index([status])
+  @@map("project")
+}
+
+model StoryboardVersion {
+  id               String    @id @default(cuid())
+  projectId        String
+  project          Project   @relation("ProjectStoryboards", fields: [projectId], references: [id], onDelete: Cascade)
+  versionNumber    Int
+  generatedPrompt  String    @db.Text
+  llmModel         String
+  llmResponseRaw   String    @db.Text
+  totalDurationSec Float?
+  createdAt        DateTime  @default(now())
+  scenes           Scene[]
+  currentProject   Project?  @relation("CurrentStoryboard")
+
+  @@unique([projectId, versionNumber])
+  @@index([projectId])
+  @@map("storyboard_version")
+}
+
+model Scene {
+  id                   String            @id @default(cuid())
+  storyboardVersionId  String
+  storyboardVersion    StoryboardVersion @relation(fields: [storyboardVersionId], references: [id], onDelete: Cascade)
+  order                Int
+  narrationText        String            @db.Text
+  visualDescription    String            @db.Text
+  emotionalTone        String?
+  audioAssetId         String?           @unique
+  audioAsset           Asset?            @relation("SceneAudio", fields: [audioAssetId], references: [id], onDelete: SetNull)
+  imageAssetId         String?           @unique
+  imageAsset           Asset?            @relation("SceneImage", fields: [imageAssetId], references: [id], onDelete: SetNull)
+  startTimeSec         Float?
+  durationSec          Float?
+  animationPreset      String?
+  generationJobId      String?
+  generationJob        GenerationJob?    @relation(fields: [generationJobId], references: [id], onDelete: SetNull)
+  createdAt            DateTime          @default(now())
+
+  @@unique([storyboardVersionId, order])
+  @@index([storyboardVersionId, order])
+  @@map("scene")
+}
+
+model Asset {
+  id               String         @id @default(cuid())
+  userId           String
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId        String?
+  assetType        String         // audio, image, video
+  mimeType         String
+  sizeBytes        BigInt
+  durationSec      Float?
+  width            Int?
+  height           Int?
+  assetKey         String         @unique
+  checksum         String
+  metadata         String?        @db.Text
+  lifecycleStatus  String         @default("active") // active, temporary, orphaned, deleted
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  sceneAudios      Scene[]        @relation("SceneAudio")
+  sceneImages      Scene[]        @relation("SceneImage")
+  finalVideos      Project[]      @relation("FinalVideo")
+  thumbnails       Project[]      @relation("Thumbnail")
+  generationJobs   GenerationJob[]
+
+  @@index([userId, createdAt])
+  @@index([assetKey])
+  @@index([checksum])
+  @@index([lifecycleStatus])
+  @@map("asset")
+}
+
+model GenerationJob {
+  id            String     @id @default(cuid())
+  userId        String
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId     String
+  project       Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  jobType       String     // storyboard, audio, image
+  status        String     @default("pending") // pending, running, completed, failed, cancelled
+  aiProvider    String
+  aiModel       String?
+  inputParams   String     @db.Text
+  outputAssetId String?    @unique
+  outputAsset   Asset?     @relation(fields: [outputAssetId], references: [id], onDelete: SetNull)
+  errorCode     String?
+  errorMessage  String?    @db.Text
+  retryCount    Int        @default(0)
+  startedAt     DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  scenes        Scene[]
+  jobEvents     JobEvent[]
+
+  @@index([userId, createdAt])
+  @@index([projectId, status])
+  @@index([status])
+  @@map("generation_job")
+}
+
+model RenderJob {
+  id                   String     @id @default(cuid())
+  projectId            String
+  project              Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  storyboardVersionId  String?
+  status               String     @default("pending") // pending, rendering, completed, failed, cancelled
+  renderEngine         String     @default("remotion")
+  compositionId        String?
+  inputProps           String     @db.Text
+  outputVideoUrl       String?
+  outputThumbnailUrl   String?
+  errorCode            String?
+  errorMessage         String?    @db.Text
+  retryCount           Int        @default(0)
+  startedAt            DateTime?
+  completedAt          DateTime?
+  createdAt            DateTime   @default(now())
+  updatedAt            DateTime   @updatedAt
+  jobEvents            JobEvent[]
+
+  @@index([projectId, status])
+  @@index([status])
+  @@map("render_job")
+}
+
+model JobEvent {
+  id              String         @id @default(cuid())
+  generationJobId String?
+  generationJob   GenerationJob? @relation(fields: [generationJobId], references: [id], onDelete: Cascade)
+  renderJobId     String?
+  renderJob       RenderJob?     @relation(fields: [renderJobId], references: [id], onDelete: Cascade)
+  eventType       String         // started, progress, completed, failed, retry
+  message         String?        @db.Text
+  metadata        String?        @db.Text
+  createdAt       DateTime       @default(now())
+
+  @@index([generationJobId, createdAt])
+  @@index([renderJobId, createdAt])
+  @@map("job_event")
+}
+
+model UsageRecord {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  resourceType    String   // ai_tokens, render_minutes, storage_gb
+  provider        String?  // deepseek, minimax, remotion, r2
+  quantity        Float
+  unitCost        Float?
+  totalCost       Float?
+  metadata        String?  @db.Text
+  recordedAt      DateTime @default(now())
+
+  @@index([userId, recordedAt])
+  @@index([resourceType])
+  @@map("usage_record")
+}
+

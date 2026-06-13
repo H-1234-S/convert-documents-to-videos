@@ -54,7 +54,15 @@ export const ModelName = {
   User: 'User',
   Session: 'Session',
   Account: 'Account',
-  Verification: 'Verification'
+  Verification: 'Verification',
+  Project: 'Project',
+  StoryboardVersion: 'StoryboardVersion',
+  Scene: 'Scene',
+  Asset: 'Asset',
+  GenerationJob: 'GenerationJob',
+  RenderJob: 'RenderJob',
+  JobEvent: 'JobEvent',
+  UsageRecord: 'UsageRecord'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -129,6 +137,156 @@ export const VerificationScalarFieldEnum = {
 } as const
 
 export type VerificationScalarFieldEnum = (typeof VerificationScalarFieldEnum)[keyof typeof VerificationScalarFieldEnum]
+
+
+export const ProjectScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  title: 'title',
+  sourceText: 'sourceText',
+  status: 'status',
+  audienceRole: 'audienceRole',
+  audienceLevel: 'audienceLevel',
+  aspectRatio: 'aspectRatio',
+  targetDurationSec: 'targetDurationSec',
+  voiceProvider: 'voiceProvider',
+  voiceId: 'voiceId',
+  currentStoryboardVersionId: 'currentStoryboardVersionId',
+  finalVideoAssetId: 'finalVideoAssetId',
+  thumbnailAssetId: 'thumbnailAssetId',
+  errorCode: 'errorCode',
+  errorMessage: 'errorMessage',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type ProjectScalarFieldEnum = (typeof ProjectScalarFieldEnum)[keyof typeof ProjectScalarFieldEnum]
+
+
+export const StoryboardVersionScalarFieldEnum = {
+  id: 'id',
+  projectId: 'projectId',
+  versionNumber: 'versionNumber',
+  generatedPrompt: 'generatedPrompt',
+  llmModel: 'llmModel',
+  llmResponseRaw: 'llmResponseRaw',
+  totalDurationSec: 'totalDurationSec',
+  createdAt: 'createdAt'
+} as const
+
+export type StoryboardVersionScalarFieldEnum = (typeof StoryboardVersionScalarFieldEnum)[keyof typeof StoryboardVersionScalarFieldEnum]
+
+
+export const SceneScalarFieldEnum = {
+  id: 'id',
+  storyboardVersionId: 'storyboardVersionId',
+  order: 'order',
+  narrationText: 'narrationText',
+  visualDescription: 'visualDescription',
+  emotionalTone: 'emotionalTone',
+  audioAssetId: 'audioAssetId',
+  imageAssetId: 'imageAssetId',
+  startTimeSec: 'startTimeSec',
+  durationSec: 'durationSec',
+  animationPreset: 'animationPreset',
+  generationJobId: 'generationJobId',
+  createdAt: 'createdAt'
+} as const
+
+export type SceneScalarFieldEnum = (typeof SceneScalarFieldEnum)[keyof typeof SceneScalarFieldEnum]
+
+
+export const AssetScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  projectId: 'projectId',
+  assetType: 'assetType',
+  mimeType: 'mimeType',
+  sizeBytes: 'sizeBytes',
+  durationSec: 'durationSec',
+  width: 'width',
+  height: 'height',
+  assetKey: 'assetKey',
+  checksum: 'checksum',
+  metadata: 'metadata',
+  lifecycleStatus: 'lifecycleStatus',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AssetScalarFieldEnum = (typeof AssetScalarFieldEnum)[keyof typeof AssetScalarFieldEnum]
+
+
+export const GenerationJobScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  projectId: 'projectId',
+  jobType: 'jobType',
+  status: 'status',
+  aiProvider: 'aiProvider',
+  aiModel: 'aiModel',
+  inputParams: 'inputParams',
+  outputAssetId: 'outputAssetId',
+  errorCode: 'errorCode',
+  errorMessage: 'errorMessage',
+  retryCount: 'retryCount',
+  startedAt: 'startedAt',
+  completedAt: 'completedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type GenerationJobScalarFieldEnum = (typeof GenerationJobScalarFieldEnum)[keyof typeof GenerationJobScalarFieldEnum]
+
+
+export const RenderJobScalarFieldEnum = {
+  id: 'id',
+  projectId: 'projectId',
+  storyboardVersionId: 'storyboardVersionId',
+  status: 'status',
+  renderEngine: 'renderEngine',
+  compositionId: 'compositionId',
+  inputProps: 'inputProps',
+  outputVideoUrl: 'outputVideoUrl',
+  outputThumbnailUrl: 'outputThumbnailUrl',
+  errorCode: 'errorCode',
+  errorMessage: 'errorMessage',
+  retryCount: 'retryCount',
+  startedAt: 'startedAt',
+  completedAt: 'completedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type RenderJobScalarFieldEnum = (typeof RenderJobScalarFieldEnum)[keyof typeof RenderJobScalarFieldEnum]
+
+
+export const JobEventScalarFieldEnum = {
+  id: 'id',
+  generationJobId: 'generationJobId',
+  renderJobId: 'renderJobId',
+  eventType: 'eventType',
+  message: 'message',
+  metadata: 'metadata',
+  createdAt: 'createdAt'
+} as const
+
+export type JobEventScalarFieldEnum = (typeof JobEventScalarFieldEnum)[keyof typeof JobEventScalarFieldEnum]
+
+
+export const UsageRecordScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  resourceType: 'resourceType',
+  provider: 'provider',
+  quantity: 'quantity',
+  unitCost: 'unitCost',
+  totalCost: 'totalCost',
+  metadata: 'metadata',
+  recordedAt: 'recordedAt'
+} as const
+
+export type UsageRecordScalarFieldEnum = (typeof UsageRecordScalarFieldEnum)[keyof typeof UsageRecordScalarFieldEnum]
 
 
 export const SortOrder = {
