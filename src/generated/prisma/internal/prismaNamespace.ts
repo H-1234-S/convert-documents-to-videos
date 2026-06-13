@@ -1483,6 +1483,7 @@ export const GenerationJobScalarFieldEnum = {
   userId: 'userId',
   projectId: 'projectId',
   jobType: 'jobType',
+  requestId: 'requestId',
   status: 'status',
   aiProvider: 'aiProvider',
   aiModel: 'aiModel',
