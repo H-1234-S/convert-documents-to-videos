@@ -89,7 +89,7 @@ model Project {
   user                       User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   title                      String
   sourceText                 String              @db.Text
-  status                     String              @default("draft") // draft, queued, generating_storyboard, storyboard_ready, generating_audio, calculating_timeline, rendering, completed, failed, cancelled
+  status                     String              @default("queued") // draft, queued, generating_storyboard, storyboard_ready, generating_audio, calculating_timeline, rendering, completed, failed, cancelled
   audienceRole               String?
   audienceLevel              String?
   aspectRatio                String              @default("16:9") // 16:9, 9:16, 1:1
@@ -194,6 +194,7 @@ model GenerationJob {
   projectId     String
   project       Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
   jobType       String     // storyboard, audio, image
+  requestId     String?    @unique
   status        String     @default("pending") // pending, running, completed, failed, cancelled
   aiProvider    String
   aiModel       String?

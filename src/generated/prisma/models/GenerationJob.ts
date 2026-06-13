@@ -39,6 +39,7 @@ export type GenerationJobMinAggregateOutputType = {
   userId: string | null
   projectId: string | null
   jobType: string | null
+  requestId: string | null
   status: string | null
   aiProvider: string | null
   aiModel: string | null
@@ -58,6 +59,7 @@ export type GenerationJobMaxAggregateOutputType = {
   userId: string | null
   projectId: string | null
   jobType: string | null
+  requestId: string | null
   status: string | null
   aiProvider: string | null
   aiModel: string | null
@@ -77,6 +79,7 @@ export type GenerationJobCountAggregateOutputType = {
   userId: number
   projectId: number
   jobType: number
+  requestId: number
   status: number
   aiProvider: number
   aiModel: number
@@ -106,6 +109,7 @@ export type GenerationJobMinAggregateInputType = {
   userId?: true
   projectId?: true
   jobType?: true
+  requestId?: true
   status?: true
   aiProvider?: true
   aiModel?: true
@@ -125,6 +129,7 @@ export type GenerationJobMaxAggregateInputType = {
   userId?: true
   projectId?: true
   jobType?: true
+  requestId?: true
   status?: true
   aiProvider?: true
   aiModel?: true
@@ -144,6 +149,7 @@ export type GenerationJobCountAggregateInputType = {
   userId?: true
   projectId?: true
   jobType?: true
+  requestId?: true
   status?: true
   aiProvider?: true
   aiModel?: true
@@ -250,6 +256,7 @@ export type GenerationJobGroupByOutputType = {
   userId: string
   projectId: string
   jobType: string
+  requestId: string | null
   status: string
   aiProvider: string
   aiModel: string | null
@@ -292,6 +299,7 @@ export type GenerationJobWhereInput = {
   userId?: Prisma.StringFilter<"GenerationJob"> | string
   projectId?: Prisma.StringFilter<"GenerationJob"> | string
   jobType?: Prisma.StringFilter<"GenerationJob"> | string
+  requestId?: Prisma.StringNullableFilter<"GenerationJob"> | string | null
   status?: Prisma.StringFilter<"GenerationJob"> | string
   aiProvider?: Prisma.StringFilter<"GenerationJob"> | string
   aiModel?: Prisma.StringNullableFilter<"GenerationJob"> | string | null
@@ -316,6 +324,7 @@ export type GenerationJobOrderByWithRelationInput = {
   userId?: Prisma.SortOrder
   projectId?: Prisma.SortOrder
   jobType?: Prisma.SortOrder
+  requestId?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   aiProvider?: Prisma.SortOrder
   aiModel?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -337,6 +346,7 @@ export type GenerationJobOrderByWithRelationInput = {
 
 export type GenerationJobWhereUniqueInput = Prisma.AtLeast<{
   id?: string
+  requestId?: string
   outputAssetId?: string
   AND?: Prisma.GenerationJobWhereInput | Prisma.GenerationJobWhereInput[]
   OR?: Prisma.GenerationJobWhereInput[]
@@ -360,13 +370,14 @@ export type GenerationJobWhereUniqueInput = Prisma.AtLeast<{
   outputAsset?: Prisma.XOR<Prisma.AssetNullableScalarRelationFilter, Prisma.AssetWhereInput> | null
   scenes?: Prisma.SceneListRelationFilter
   jobEvents?: Prisma.JobEventListRelationFilter
-}, "id" | "outputAssetId">
+}, "id" | "requestId" | "outputAssetId">
 
 export type GenerationJobOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   projectId?: Prisma.SortOrder
   jobType?: Prisma.SortOrder
+  requestId?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   aiProvider?: Prisma.SortOrder
   aiModel?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -394,6 +405,7 @@ export type GenerationJobScalarWhereWithAggregatesInput = {
   userId?: Prisma.StringWithAggregatesFilter<"GenerationJob"> | string
   projectId?: Prisma.StringWithAggregatesFilter<"GenerationJob"> | string
   jobType?: Prisma.StringWithAggregatesFilter<"GenerationJob"> | string
+  requestId?: Prisma.StringNullableWithAggregatesFilter<"GenerationJob"> | string | null
   status?: Prisma.StringWithAggregatesFilter<"GenerationJob"> | string
   aiProvider?: Prisma.StringWithAggregatesFilter<"GenerationJob"> | string
   aiModel?: Prisma.StringNullableWithAggregatesFilter<"GenerationJob"> | string | null
@@ -411,6 +423,7 @@ export type GenerationJobScalarWhereWithAggregatesInput = {
 export type GenerationJobCreateInput = {
   id?: string
   jobType: string
+  requestId?: string | null
   status?: string
   aiProvider: string
   aiModel?: string | null
@@ -434,6 +447,7 @@ export type GenerationJobUncheckedCreateInput = {
   userId: string
   projectId: string
   jobType: string
+  requestId?: string | null
   status?: string
   aiProvider: string
   aiModel?: string | null
@@ -453,6 +467,7 @@ export type GenerationJobUncheckedCreateInput = {
 export type GenerationJobUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   jobType?: Prisma.StringFieldUpdateOperationsInput | string
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   aiProvider?: Prisma.StringFieldUpdateOperationsInput | string
   aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -476,6 +491,7 @@ export type GenerationJobUncheckedUpdateInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   projectId?: Prisma.StringFieldUpdateOperationsInput | string
   jobType?: Prisma.StringFieldUpdateOperationsInput | string
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   aiProvider?: Prisma.StringFieldUpdateOperationsInput | string
   aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -497,6 +513,7 @@ export type GenerationJobCreateManyInput = {
   userId: string
   projectId: string
   jobType: string
+  requestId?: string | null
   status?: string
   aiProvider: string
   aiModel?: string | null
@@ -514,6 +531,7 @@ export type GenerationJobCreateManyInput = {
 export type GenerationJobUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   jobType?: Prisma.StringFieldUpdateOperationsInput | string
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   aiProvider?: Prisma.StringFieldUpdateOperationsInput | string
   aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -532,6 +550,7 @@ export type GenerationJobUncheckedUpdateManyInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   projectId?: Prisma.StringFieldUpdateOperationsInput | string
   jobType?: Prisma.StringFieldUpdateOperationsInput | string
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   aiProvider?: Prisma.StringFieldUpdateOperationsInput | string
   aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -566,6 +585,7 @@ export type GenerationJobCountOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   projectId?: Prisma.SortOrder
   jobType?: Prisma.SortOrder
+  requestId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   aiProvider?: Prisma.SortOrder
   aiModel?: Prisma.SortOrder
@@ -589,6 +609,7 @@ export type GenerationJobMaxOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   projectId?: Prisma.SortOrder
   jobType?: Prisma.SortOrder
+  requestId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   aiProvider?: Prisma.SortOrder
   aiModel?: Prisma.SortOrder
@@ -608,6 +629,7 @@ export type GenerationJobMinOrderByAggregateInput = {
   userId?: Prisma.SortOrder
   projectId?: Prisma.SortOrder
   jobType?: Prisma.SortOrder
+  requestId?: Prisma.SortOrder
   status?: Prisma.SortOrder
   aiProvider?: Prisma.SortOrder
   aiModel?: Prisma.SortOrder
@@ -787,6 +809,7 @@ export type GenerationJobUpdateOneWithoutJobEventsNestedInput = {
 export type GenerationJobCreateWithoutUserInput = {
   id?: string
   jobType: string
+  requestId?: string | null
   status?: string
   aiProvider: string
   aiModel?: string | null
@@ -808,6 +831,7 @@ export type GenerationJobUncheckedCreateWithoutUserInput = {
   id?: string
   projectId: string
   jobType: string
+  requestId?: string | null
   status?: string
   aiProvider: string
   aiModel?: string | null
@@ -858,6 +882,7 @@ export type GenerationJobScalarWhereInput = {
   userId?: Prisma.StringFilter<"GenerationJob"> | string
   projectId?: Prisma.StringFilter<"GenerationJob"> | string
   jobType?: Prisma.StringFilter<"GenerationJob"> | string
+  requestId?: Prisma.StringNullableFilter<"GenerationJob"> | string | null
   status?: Prisma.StringFilter<"GenerationJob"> | string
   aiProvider?: Prisma.StringFilter<"GenerationJob"> | string
   aiModel?: Prisma.StringNullableFilter<"GenerationJob"> | string | null
@@ -875,6 +900,7 @@ export type GenerationJobScalarWhereInput = {
 export type GenerationJobCreateWithoutProjectInput = {
   id?: string
   jobType: string
+  requestId?: string | null
   status?: string
   aiProvider: string
   aiModel?: string | null
@@ -896,6 +922,7 @@ export type GenerationJobUncheckedCreateWithoutProjectInput = {
   id?: string
   userId: string
   jobType: string
+  requestId?: string | null
   status?: string
   aiProvider: string
   aiModel?: string | null
@@ -941,6 +968,7 @@ export type GenerationJobUpdateManyWithWhereWithoutProjectInput = {
 export type GenerationJobCreateWithoutScenesInput = {
   id?: string
   jobType: string
+  requestId?: string | null
   status?: string
   aiProvider: string
   aiModel?: string | null
@@ -963,6 +991,7 @@ export type GenerationJobUncheckedCreateWithoutScenesInput = {
   userId: string
   projectId: string
   jobType: string
+  requestId?: string | null
   status?: string
   aiProvider: string
   aiModel?: string | null
@@ -997,6 +1026,7 @@ export type GenerationJobUpdateToOneWithWhereWithoutScenesInput = {
 export type GenerationJobUpdateWithoutScenesInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   jobType?: Prisma.StringFieldUpdateOperationsInput | string
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   aiProvider?: Prisma.StringFieldUpdateOperationsInput | string
   aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1019,6 +1049,7 @@ export type GenerationJobUncheckedUpdateWithoutScenesInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   projectId?: Prisma.StringFieldUpdateOperationsInput | string
   jobType?: Prisma.StringFieldUpdateOperationsInput | string
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   aiProvider?: Prisma.StringFieldUpdateOperationsInput | string
   aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1037,6 +1068,7 @@ export type GenerationJobUncheckedUpdateWithoutScenesInput = {
 export type GenerationJobCreateWithoutOutputAssetInput = {
   id?: string
   jobType: string
+  requestId?: string | null
   status?: string
   aiProvider: string
   aiModel?: string | null
@@ -1059,6 +1091,7 @@ export type GenerationJobUncheckedCreateWithoutOutputAssetInput = {
   userId: string
   projectId: string
   jobType: string
+  requestId?: string | null
   status?: string
   aiProvider: string
   aiModel?: string | null
@@ -1103,6 +1136,7 @@ export type GenerationJobUpdateManyWithWhereWithoutOutputAssetInput = {
 export type GenerationJobCreateWithoutJobEventsInput = {
   id?: string
   jobType: string
+  requestId?: string | null
   status?: string
   aiProvider: string
   aiModel?: string | null
@@ -1125,6 +1159,7 @@ export type GenerationJobUncheckedCreateWithoutJobEventsInput = {
   userId: string
   projectId: string
   jobType: string
+  requestId?: string | null
   status?: string
   aiProvider: string
   aiModel?: string | null
@@ -1159,6 +1194,7 @@ export type GenerationJobUpdateToOneWithWhereWithoutJobEventsInput = {
 export type GenerationJobUpdateWithoutJobEventsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   jobType?: Prisma.StringFieldUpdateOperationsInput | string
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   aiProvider?: Prisma.StringFieldUpdateOperationsInput | string
   aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1181,6 +1217,7 @@ export type GenerationJobUncheckedUpdateWithoutJobEventsInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   projectId?: Prisma.StringFieldUpdateOperationsInput | string
   jobType?: Prisma.StringFieldUpdateOperationsInput | string
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   aiProvider?: Prisma.StringFieldUpdateOperationsInput | string
   aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1200,6 +1237,7 @@ export type GenerationJobCreateManyUserInput = {
   id?: string
   projectId: string
   jobType: string
+  requestId?: string | null
   status?: string
   aiProvider: string
   aiModel?: string | null
@@ -1217,6 +1255,7 @@ export type GenerationJobCreateManyUserInput = {
 export type GenerationJobUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   jobType?: Prisma.StringFieldUpdateOperationsInput | string
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   aiProvider?: Prisma.StringFieldUpdateOperationsInput | string
   aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1238,6 +1277,7 @@ export type GenerationJobUncheckedUpdateWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   projectId?: Prisma.StringFieldUpdateOperationsInput | string
   jobType?: Prisma.StringFieldUpdateOperationsInput | string
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   aiProvider?: Prisma.StringFieldUpdateOperationsInput | string
   aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1258,6 +1298,7 @@ export type GenerationJobUncheckedUpdateManyWithoutUserInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   projectId?: Prisma.StringFieldUpdateOperationsInput | string
   jobType?: Prisma.StringFieldUpdateOperationsInput | string
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   aiProvider?: Prisma.StringFieldUpdateOperationsInput | string
   aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1276,6 +1317,7 @@ export type GenerationJobCreateManyProjectInput = {
   id?: string
   userId: string
   jobType: string
+  requestId?: string | null
   status?: string
   aiProvider: string
   aiModel?: string | null
@@ -1293,6 +1335,7 @@ export type GenerationJobCreateManyProjectInput = {
 export type GenerationJobUpdateWithoutProjectInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   jobType?: Prisma.StringFieldUpdateOperationsInput | string
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   aiProvider?: Prisma.StringFieldUpdateOperationsInput | string
   aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1314,6 +1357,7 @@ export type GenerationJobUncheckedUpdateWithoutProjectInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   jobType?: Prisma.StringFieldUpdateOperationsInput | string
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   aiProvider?: Prisma.StringFieldUpdateOperationsInput | string
   aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1334,6 +1378,7 @@ export type GenerationJobUncheckedUpdateManyWithoutProjectInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   jobType?: Prisma.StringFieldUpdateOperationsInput | string
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   aiProvider?: Prisma.StringFieldUpdateOperationsInput | string
   aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1353,6 +1398,7 @@ export type GenerationJobCreateManyOutputAssetInput = {
   userId: string
   projectId: string
   jobType: string
+  requestId?: string | null
   status?: string
   aiProvider: string
   aiModel?: string | null
@@ -1369,6 +1415,7 @@ export type GenerationJobCreateManyOutputAssetInput = {
 export type GenerationJobUpdateWithoutOutputAssetInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   jobType?: Prisma.StringFieldUpdateOperationsInput | string
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   aiProvider?: Prisma.StringFieldUpdateOperationsInput | string
   aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1391,6 +1438,7 @@ export type GenerationJobUncheckedUpdateWithoutOutputAssetInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   projectId?: Prisma.StringFieldUpdateOperationsInput | string
   jobType?: Prisma.StringFieldUpdateOperationsInput | string
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   aiProvider?: Prisma.StringFieldUpdateOperationsInput | string
   aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1411,6 +1459,7 @@ export type GenerationJobUncheckedUpdateManyWithoutOutputAssetInput = {
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   projectId?: Prisma.StringFieldUpdateOperationsInput | string
   jobType?: Prisma.StringFieldUpdateOperationsInput | string
+  requestId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   status?: Prisma.StringFieldUpdateOperationsInput | string
   aiProvider?: Prisma.StringFieldUpdateOperationsInput | string
   aiModel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1469,6 +1518,7 @@ export type GenerationJobSelect<ExtArgs extends runtime.Types.Extensions.Interna
   userId?: boolean
   projectId?: boolean
   jobType?: boolean
+  requestId?: boolean
   status?: boolean
   aiProvider?: boolean
   aiModel?: boolean
@@ -1494,6 +1544,7 @@ export type GenerationJobSelectCreateManyAndReturn<ExtArgs extends runtime.Types
   userId?: boolean
   projectId?: boolean
   jobType?: boolean
+  requestId?: boolean
   status?: boolean
   aiProvider?: boolean
   aiModel?: boolean
@@ -1516,6 +1567,7 @@ export type GenerationJobSelectUpdateManyAndReturn<ExtArgs extends runtime.Types
   userId?: boolean
   projectId?: boolean
   jobType?: boolean
+  requestId?: boolean
   status?: boolean
   aiProvider?: boolean
   aiModel?: boolean
@@ -1538,6 +1590,7 @@ export type GenerationJobSelectScalar = {
   userId?: boolean
   projectId?: boolean
   jobType?: boolean
+  requestId?: boolean
   status?: boolean
   aiProvider?: boolean
   aiModel?: boolean
@@ -1552,7 +1605,7 @@ export type GenerationJobSelectScalar = {
   updatedAt?: boolean
 }
 
-export type GenerationJobOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "projectId" | "jobType" | "status" | "aiProvider" | "aiModel" | "inputParams" | "outputAssetId" | "errorCode" | "errorMessage" | "retryCount" | "startedAt" | "completedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["generationJob"]>
+export type GenerationJobOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "projectId" | "jobType" | "requestId" | "status" | "aiProvider" | "aiModel" | "inputParams" | "outputAssetId" | "errorCode" | "errorMessage" | "retryCount" | "startedAt" | "completedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["generationJob"]>
 export type GenerationJobInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   project?: boolean | Prisma.ProjectDefaultArgs<ExtArgs>
@@ -1586,6 +1639,7 @@ export type $GenerationJobPayload<ExtArgs extends runtime.Types.Extensions.Inter
     userId: string
     projectId: string
     jobType: string
+    requestId: string | null
     status: string
     aiProvider: string
     aiModel: string | null
@@ -2030,6 +2084,7 @@ export interface GenerationJobFieldRefs {
   readonly userId: Prisma.FieldRef<"GenerationJob", 'String'>
   readonly projectId: Prisma.FieldRef<"GenerationJob", 'String'>
   readonly jobType: Prisma.FieldRef<"GenerationJob", 'String'>
+  readonly requestId: Prisma.FieldRef<"GenerationJob", 'String'>
   readonly status: Prisma.FieldRef<"GenerationJob", 'String'>
   readonly aiProvider: Prisma.FieldRef<"GenerationJob", 'String'>
   readonly aiModel: Prisma.FieldRef<"GenerationJob", 'String'>
