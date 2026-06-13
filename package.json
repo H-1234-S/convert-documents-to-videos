@@ -17,6 +17,8 @@
     "@marsidev/react-turnstile": "^1.5.2",
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "@remotion/cli": "^4.0.476",
+    "@remotion/player": "^4.0.476",
     "@tanstack/react-form-nextjs": "^1.33.0",
     "@tanstack/react-query": "^5.101.0",
     "@tanstack/react-query-devtools": "^5.101.0",
@@ -43,6 +45,7 @@
     "react-dom": "19.2.4",
     "react-resizable-panels": "^4.11.2",
     "recharts": "^3.8.0",
+    "remotion": "^4.0.476",
     "resend": "^6.12.4",
     "shadcn": "^4.10.0",
     "sonner": "^2.0.7",
@@ -52,6 +55,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@remotion/eslint-plugin": "^4.0.476",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/pg": "^8.20.0",

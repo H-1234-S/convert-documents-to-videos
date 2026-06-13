@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@video/*": ["./src/remotion/*"]
     }
   },
   "include": [
