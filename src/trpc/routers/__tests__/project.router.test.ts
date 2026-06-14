@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createCaller } from "../_app";
-import type { Context } from "../../context";
+import { createCaller } from "@/trpc/routers";
+import type { Context } from "@/trpc/init";
 
 // ---- Mocks ----
 
@@ -26,7 +26,7 @@ vi.mock("@/inngest/client", () => ({
   inngest: {},
 }));
 
-vi.mock("../../services/quota.service", async () => {
+vi.mock("@/server/services/quota.service", async () => {
   const actual = await vi.importActual("../../services/quota.service");
   return {
     ...actual,

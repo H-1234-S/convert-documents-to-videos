@@ -2,7 +2,8 @@
 
 import { use } from "react";
 import { useRouter } from "next/navigation";
-import { trpc } from "@/lib/trpc/client";
+import { useTRPC } from "@/trpc/client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Film } from "lucide-react";
@@ -24,32 +25,39 @@ interface PlayPageProps {
 export default function PlayPage({ params }: PlayPageProps) {
   const { id } = use(params);
   const router = useRouter();
-  const utils = trpc.useUtils();
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
 
-  const { data: project, isLoading, isError } = trpc.project.getById.useQuery({
-    projectId: id,
-  });
+  const { data: project, isLoading, isError } = useQuery(
+    trpc.project.getById.queryOptions({
+      projectId: id,
+    }),
+  );
 
-  const deleteMutation = trpc.project.delete.useMutation({
-    onSuccess: () => {
-      toast.success("项目已删除");
-      utils.project.list.invalidate();
-      router.push("/");
-    },
-    onError: (error) => {
-      toast.error(error.message || "删除失败");
-    },
-  });
+  const deleteMutation = useMutation(
+    trpc.project.delete.mutationOptions({
+      onSuccess: () => {
+        toast.success("项目已删除");
+        queryClient.invalidateQueries(trpc.project.list.queryFilter());
+        router.push("/");
+      },
+      onError: (error) => {
+        toast.error(error.message || "删除失败");
+      },
+    }),
+  );
 
-  const retryMutation = trpc.project.retry.useMutation({
-    onSuccess: () => {
-      toast.success("已重新提交生成");
-      utils.project.list.invalidate();
-    },
-    onError: (error) => {
-      toast.error(error.message || "重试失败");
-    },
-  });
+  const retryMutation = useMutation(
+    trpc.project.retry.mutationOptions({
+      onSuccess: () => {
+        toast.success("已重新提交生成");
+        queryClient.invalidateQueries(trpc.project.list.queryFilter());
+      },
+      onError: (error) => {
+        toast.error(error.message || "重试失败");
+      },
+    }),
+  );
 
   const isFailedOrCancelled =
     project?.status === "failed" || project?.status === "cancelled";

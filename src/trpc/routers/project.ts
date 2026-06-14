@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { protectedProcedure, router } from "../trpc";
+import { protectedProcedure, router } from "../init";
 import {
   createProject,
   QuotaExceededError,
@@ -12,7 +12,7 @@ import {
   retryGeneration,
   ProjectNotFoundError,
   ProjectAccessDeniedError,
-} from "../services/project.service";
+} from "@/server/services/project.service";
 import { sendGenerateRequested } from "@/inngest/client";
 
 // ---- Zod Schemas ----

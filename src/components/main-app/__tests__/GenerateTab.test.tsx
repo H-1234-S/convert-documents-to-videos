@@ -6,22 +6,42 @@ import { GenerateTab } from "../GenerateTab";
 
 const mockMutate = vi.fn();
 
-vi.mock("@/lib/trpc/client", () => ({
-  trpc: {
+vi.mock("@/trpc/client", () => ({
+  useTRPC: () => ({
     project: {
       createAndGenerate: {
-        useMutation: ({ onSuccess }: { onSuccess?: () => void; onError?: (err: Error) => void }) => ({
-          mutate: (input: unknown) => {
+        mutationOptions: (opts?: Record<string, unknown>) => ({
+          mutationKey: [["project", "createAndGenerate"]],
+          mutationFn: (input: unknown) => {
             mockMutate(input);
             // 模拟异步成功
+            const onSuccess = opts?.onSuccess as (() => void) | undefined;
             Promise.resolve().then(() => onSuccess?.());
+            return Promise.resolve({ projectId: "test-proj", jobId: "test-job" });
           },
-          isPending: false,
+          ...opts,
         }),
       },
     },
-  },
+  }),
 }));
+
+vi.mock("@tanstack/react-query", async () => {
+  const actual = await vi.importActual("@tanstack/react-query");
+  return {
+    ...actual,
+    QueryClientProvider: actual.QueryClientProvider,
+    useMutation: (opts: Record<string, unknown>) => ({
+      mutate: (input: unknown) => {
+        const mutationFn = opts.mutationFn as (input: unknown) => Promise<unknown>;
+        return mutationFn?.(input);
+      },
+      isPending: false,
+      mutateAsync: vi.fn(),
+      reset: vi.fn(),
+    }),
+  };
+});
 
 vi.mock("crypto", () => ({
   randomUUID: () => "550e8400-e29b-41d4-a716-446655440000",

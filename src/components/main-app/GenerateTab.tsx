@@ -5,7 +5,8 @@ import { AutoResizeTextarea } from "@/components/ui/auto-resize-textarea";
 import { IconButton, type IconButtonState } from "@/components/ui/icon-button";
 import { FadeMask } from "@/components/ui/fade-mask";
 import { toast } from "sonner";
-import { trpc } from "@/lib/trpc/client";
+import { useTRPC } from "@/trpc/client";
+import { useMutation } from "@tanstack/react-query";
 
 interface GenerateTabProps {
   onTabChange: (tab: "history") => void;
@@ -38,16 +39,19 @@ const DEFAULT_CONFIG = {
 export function GenerateTab({ onTabChange }: GenerateTabProps) {
   const [text, setText] = useState("");
 
-  const createMutation = trpc.project.createAndGenerate.useMutation({
-    onSuccess: () => {
-      setText("");
-      toast.success("项目创建成功，正在生成中…");
-      onTabChange("history");
-    },
-    onError: (error) => {
-      toast.error(error.message || "创建失败，请重试");
-    },
-  });
+  const trpc = useTRPC();
+  const createMutation = useMutation(
+    trpc.project.createAndGenerate.mutationOptions({
+      onSuccess: () => {
+        setText("");
+        toast.success("项目创建成功，正在生成中…");
+        onTabChange("history");
+      },
+      onError: (error) => {
+        toast.error(error.message || "创建失败，请重试");
+      },
+    }),
+  );
 
   const isPending = createMutation.isPending;
   const isTextEmpty = text.trim().length === 0;

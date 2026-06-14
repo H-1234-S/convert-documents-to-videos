@@ -3,7 +3,8 @@
 import { useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { trpc } from "@/lib/trpc/client";
+import { useTRPC } from "@/trpc/client";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
 
 interface HistoryCardActionsProps {
   project: {
@@ -20,27 +21,32 @@ interface HistoryCardActionsProps {
  * - 重试按钮 → 仅 failed/cancelled 显示，调用 project.retry mutation
  */
 export function HistoryCardActions({ project }: HistoryCardActionsProps) {
-  const utils = trpc.useUtils();
+  const trpc = useTRPC();
+  const queryClient = useQueryClient();
 
-  const deleteMutation = trpc.project.delete.useMutation({
-    onSuccess: () => {
-      toast.success("项目已删除");
-      utils.project.list.invalidate();
-    },
-    onError: (error) => {
-      toast.error(error.message || "删除失败");
-    },
-  });
+  const deleteMutation = useMutation(
+    trpc.project.delete.mutationOptions({
+      onSuccess: () => {
+        toast.success("项目已删除");
+        queryClient.invalidateQueries(trpc.project.list.queryFilter());
+      },
+      onError: (error) => {
+        toast.error(error.message || "删除失败");
+      },
+    }),
+  );
 
-  const retryMutation = trpc.project.retry.useMutation({
-    onSuccess: () => {
-      toast.success("已重新提交生成");
-      utils.project.list.invalidate();
-    },
-    onError: (error) => {
-      toast.error(error.message || "重试失败");
-    },
-  });
+  const retryMutation = useMutation(
+    trpc.project.retry.mutationOptions({
+      onSuccess: () => {
+        toast.success("已重新提交生成");
+        queryClient.invalidateQueries(trpc.project.list.queryFilter());
+      },
+      onError: (error) => {
+        toast.error(error.message || "重试失败");
+      },
+    }),
+  );
 
   const showRetry = project.status === "failed" || project.status === "cancelled";
 
