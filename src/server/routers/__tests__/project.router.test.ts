@@ -9,11 +9,13 @@ vi.mock("@/lib/db/client", () => ({
     $transaction: vi.fn(),
     generationJob: {
       findUnique: vi.fn(),
+      create: vi.fn(),
     },
     project: {
       findMany: vi.fn(),
       count: vi.fn(),
       findUnique: vi.fn(),
+      update: vi.fn(),
     },
   },
 }));
@@ -526,6 +528,159 @@ describe("project.getById", () => {
 
     await expect(
       caller.project.getById({ projectId: "<script>" }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+  });
+});
+
+// ---- project.delete tests ----
+
+describe("project.delete", () => {
+  it("未认证用户应返回 UNAUTHORIZED", async () => {
+    const caller = createCaller(createAnonCtx());
+
+    await expect(
+      caller.project.delete({ projectId: "proj-1" }),
+    ).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+  });
+
+  it("owner 可删除自己的项目", async () => {
+    const caller = createCaller(createUserCtx());
+
+    (mockPrisma.project.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "user-test-1",
+      status: "completed",
+    });
+    (mockPrisma.project.update as ReturnType<typeof vi.fn>).mockResolvedValue({});
+
+    const result = await caller.project.delete({ projectId: "proj-1" });
+
+    expect(result).toEqual({ success: true });
+    expect(mockPrisma.project.update).toHaveBeenCalledWith({
+      where: { id: "proj-1" },
+      data: { status: "deleted" },
+    });
+  });
+
+  it("非 owner 应返回 FORBIDDEN", async () => {
+    const caller = createCaller(createUserCtx());
+
+    (mockPrisma.project.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "other-user",
+      status: "completed",
+    });
+
+    await expect(
+      caller.project.delete({ projectId: "proj-1" }),
+    ).rejects.toMatchObject({
+      code: "FORBIDDEN",
+      message: expect.stringContaining("[PROJECT_ACCESS_DENIED]"),
+    });
+  });
+
+  it("不存在的 projectId 应返回 NOT_FOUND", async () => {
+    const caller = createCaller(createUserCtx());
+
+    (mockPrisma.project.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(
+      null,
+    );
+
+    await expect(
+      caller.project.delete({ projectId: "nonexistent" }),
+    ).rejects.toMatchObject({
+      code: "NOT_FOUND",
+      message: expect.stringContaining("[PROJECT_NOT_FOUND]"),
+    });
+  });
+
+  it("空 projectId 应返回 BAD_REQUEST", async () => {
+    const caller = createCaller(createUserCtx());
+
+    await expect(
+      caller.project.delete({ projectId: "" }),
+    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+  });
+});
+
+// ---- project.retry tests ----
+
+describe("project.retry", () => {
+  it("未认证用户应返回 UNAUTHORIZED", async () => {
+    const caller = createCaller(createAnonCtx());
+
+    await expect(
+      caller.project.retry({ projectId: "proj-1" }),
+    ).rejects.toMatchObject({ code: "UNAUTHORIZED" });
+  });
+
+  it("owner 可重试自己的项目", async () => {
+    const caller = createCaller(createUserCtx());
+
+    (mockPrisma.project.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "user-test-1",
+      status: "failed",
+      sourceText: "Test",
+      aspectRatio: "16:9",
+      audienceRole: null,
+      audienceLevel: null,
+      targetDurationSec: null,
+      voiceProvider: null,
+      voiceId: null,
+    });
+    (mockPrisma.generationJob.create as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: "new-job",
+    });
+    (mockPrisma.project.update as ReturnType<typeof vi.fn>).mockResolvedValue({});
+
+    const result = await caller.project.retry({ projectId: "proj-1" });
+
+    expect(result).toEqual({ jobId: "new-job" });
+    expect(mockPrisma.project.update).toHaveBeenCalledWith({
+      where: { id: "proj-1" },
+      data: {
+        status: "queued",
+        errorCode: null,
+        errorMessage: null,
+      },
+    });
+    expect(mockSendEvent).toHaveBeenCalled();
+  });
+
+  it("非 owner 应返回 FORBIDDEN", async () => {
+    const caller = createCaller(createUserCtx());
+
+    (mockPrisma.project.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: "other-user",
+      status: "failed",
+    });
+
+    await expect(
+      caller.project.retry({ projectId: "proj-1" }),
+    ).rejects.toMatchObject({
+      code: "FORBIDDEN",
+      message: expect.stringContaining("[PROJECT_ACCESS_DENIED]"),
+    });
+  });
+
+  it("不存在的 projectId 应返回 NOT_FOUND", async () => {
+    const caller = createCaller(createUserCtx());
+
+    (mockPrisma.project.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(
+      null,
+    );
+
+    await expect(
+      caller.project.retry({ projectId: "nonexistent" }),
+    ).rejects.toMatchObject({
+      code: "NOT_FOUND",
+      message: expect.stringContaining("[PROJECT_NOT_FOUND]"),
+    });
+  });
+
+  it("空 projectId 应返回 BAD_REQUEST", async () => {
+    const caller = createCaller(createUserCtx());
+
+    await expect(
+      caller.project.retry({ projectId: "" }),
     ).rejects.toMatchObject({ code: "BAD_REQUEST" });
   });
 });
