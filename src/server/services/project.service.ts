@@ -343,3 +343,113 @@ export async function getProjectById(
 
   return project;
 }
+
+// ---- Delete & Retry ----
+
+/** deleteProject 的返回值 */
+export interface DeleteProjectResult {
+  success: true;
+}
+
+/** retryGeneration 的返回值 */
+export interface RetryGenerationResult {
+  jobId: string;
+}
+
+/**
+ * 软删除项目：将项目状态设为 `deleted`。
+ *
+ * 权限校验：仅 owner 可删除。
+ * 项目不存在时抛 ProjectNotFoundError，非 owner 抛 ProjectAccessDeniedError。
+ *
+ * @param projectId - 项目 ID
+ * @param userId - 当前用户 ID
+ * @returns DeleteProjectResult
+ */
+export async function deleteProject(
+  projectId: string,
+  userId: string,
+): Promise<DeleteProjectResult> {
+  const { prisma } = await import("@/lib/db/client");
+
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    select: { userId: true, status: true },
+  });
+
+  if (!project) {
+    throw new ProjectNotFoundError(projectId);
+  }
+
+  if (project.userId !== userId) {
+    throw new ProjectAccessDeniedError(projectId);
+  }
+
+  await prisma.project.update({
+    where: { id: projectId },
+    data: { status: "deleted" },
+  });
+
+  return { success: true };
+}
+
+/**
+ * 重试失败/取消的项目生成：重置状态为 queued，创建新的 GenerationJob。
+ *
+ * 权限校验：仅 owner 可重试。
+ * 项目不存在时抛 ProjectNotFoundError，非 owner 抛 ProjectAccessDeniedError。
+ * 创建 GenerationJob 后由 router 层发送 Inngest 事件。
+ *
+ * @param projectId - 项目 ID
+ * @param userId - 当前用户 ID
+ * @returns RetryGenerationResult（含新 jobId，供 router 层发送 Inngest 事件）
+ */
+export async function retryGeneration(
+  projectId: string,
+  userId: string,
+): Promise<RetryGenerationResult> {
+  const { prisma } = await import("@/lib/db/client");
+
+  const project = await prisma.project.findUnique({
+    where: { id: projectId },
+    select: { userId: true, status: true, sourceText: true, aspectRatio: true, audienceRole: true, audienceLevel: true, targetDurationSec: true, voiceProvider: true, voiceId: true },
+  });
+
+  if (!project) {
+    throw new ProjectNotFoundError(projectId);
+  }
+
+  if (project.userId !== userId) {
+    throw new ProjectAccessDeniedError(projectId);
+  }
+
+  const job = await prisma.generationJob.create({
+    data: {
+      userId,
+      projectId,
+      jobType: "storyboard",
+      status: "pending",
+      aiProvider: "internal",
+      inputParams: JSON.stringify({
+        sourceText: project.sourceText,
+        aspectRatio: project.aspectRatio,
+        audienceRole: project.audienceRole,
+        audienceLevel: project.audienceLevel,
+        targetDurationSec: project.targetDurationSec,
+        voiceProvider: project.voiceProvider,
+        voiceId: project.voiceId,
+      }),
+    },
+  });
+
+  await prisma.project.update({
+    where: { id: projectId },
+    data: {
+      status: "queued",
+      errorCode: null,
+      errorMessage: null,
+    },
+  });
+
+  return { jobId: job.id };
+}

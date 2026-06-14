@@ -8,6 +8,8 @@ import {
   DuplicateRequestError,
   listProjects,
   getProjectById,
+  deleteProject,
+  retryGeneration,
   ProjectNotFoundError,
   ProjectAccessDeniedError,
 } from "../services/project.service";
@@ -65,6 +67,24 @@ export const listProjectsInputSchema = z.object({
 /** project.getById 输入 */
 export const getProjectByIdInputSchema = z.object({
   // CUID 格式校验：projectId 是 CUID 而非 UUID，不能用 .uuid()
+  projectId: z
+    .string()
+    .min(1, "projectId 不能为空")
+    .max(50, "projectId 长度不能超过 50")
+    .regex(/^[a-zA-Z0-9_-]+$/, "projectId 格式无效"),
+});
+
+/** project.delete 输入 */
+export const deleteProjectInputSchema = z.object({
+  projectId: z
+    .string()
+    .min(1, "projectId 不能为空")
+    .max(50, "projectId 长度不能超过 50")
+    .regex(/^[a-zA-Z0-9_-]+$/, "projectId 格式无效"),
+});
+
+/** project.retry 输入 */
+export const retryProjectInputSchema = z.object({
   projectId: z
     .string()
     .min(1, "projectId 不能为空")
@@ -174,6 +194,88 @@ export const projectRouter = router({
         const { userId: _unused, ...publicDetail } = detail;
         void _unused;
         return publicDetail;
+      } catch (error) {
+        if (error instanceof ProjectNotFoundError) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: `[PROJECT_NOT_FOUND] 项目不存在 | projectId: ${error.projectId}`,
+          });
+        }
+
+        if (error instanceof ProjectAccessDeniedError) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: `[PROJECT_ACCESS_DENIED] 无权访问该项目 | projectId: ${error.projectId}`,
+          });
+        }
+
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    }),
+
+  /**
+   * 软删除项目：将项目状态设为 deleted。
+   *
+   * 权限：仅 owner 可删除。
+   * 返回 { success: true }。
+   */
+  delete: protectedProcedure
+    .input(deleteProjectInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      try {
+        return await deleteProject(input.projectId, ctx.userId);
+      } catch (error) {
+        if (error instanceof ProjectNotFoundError) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: `[PROJECT_NOT_FOUND] 项目不存在 | projectId: ${error.projectId}`,
+          });
+        }
+
+        if (error instanceof ProjectAccessDeniedError) {
+          throw new TRPCError({
+            code: "FORBIDDEN",
+            message: `[PROJECT_ACCESS_DENIED] 无权访问该项目 | projectId: ${error.projectId}`,
+          });
+        }
+
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
+    }),
+
+  /**
+   * 重试失败/取消的项目生成：重置状态为 queued，创建新 GenerationJob，发送 Inngest 事件。
+   *
+   * 权限：仅 owner 可重试。
+   * 返回 { jobId }。
+   */
+  retry: protectedProcedure
+    .input(retryProjectInputSchema)
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const result = await retryGeneration(input.projectId, ctx.userId);
+
+        // 事务成功后发送 Inngest 事件（失败不阻塞响应）
+        try {
+          await sendGenerateRequested({
+            projectId: input.projectId,
+            userId: ctx.userId,
+            jobId: result.jobId,
+          });
+        } catch (sendError) {
+          console.error(
+            "[Inngest] 发送 video/generate.requested 事件失败",
+            sendError,
+          );
+        }
+
+        return result;
       } catch (error) {
         if (error instanceof ProjectNotFoundError) {
           throw new TRPCError({

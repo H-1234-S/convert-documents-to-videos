@@ -1,8 +1,7 @@
 {
   "enabledPlugins": {
     "superpowers@claude-plugins-official": true,
-    "andrej-karpathy-skills@karpathy-skills": true,
-    "ui-ux-pro-max@ui-ux-pro-max-skill": true
+    "andrej-karpathy-skills@karpathy-skills": true
   },
   "skills": {
     "directories": [
