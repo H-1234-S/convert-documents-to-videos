@@ -2,7 +2,8 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import { trpc } from "@/lib/trpc/client";
+import { useTRPC } from "@/trpc/client";
+import { useQuery } from "@tanstack/react-query";
 import { VideoCardSkeleton } from "./VideoCardSkeleton";
 import { EmptyState } from "./EmptyState";
 import { ErrorState } from "./ErrorState";
@@ -127,9 +128,12 @@ function toFocusCard(item: ProjectCardItem, index: number) {
  * - 卡片点击 → /projects/[id]/play
  */
 export function HistoryTab({ onTabChange }: HistoryTabProps) {
-  const { data, isLoading, isError, refetch } = trpc.project.list.useQuery(
-    { pageSize: 50 },
-    { refetchInterval: 10_000 },
+  const trpc = useTRPC();
+  const { data, isLoading, isError, refetch } = useQuery(
+    trpc.project.list.queryOptions(
+      { pageSize: 50 },
+      { refetchInterval: 10_000 },
+    ),
   );
 
   // 过滤掉已删除项目

@@ -134,4 +134,5 @@ This version has breaking changes — APIs, conventions, and file structure may 
 8. Avoid abstraction layers that do not simplify the code or preserve a real boundary. Prefer calling the owning module/service directly over passing broad wrapper objects through layers.
 9. Do not write explicit function return types unless TypeScript cannot infer them correctly or the annotation is required to preserve a public contract.
 10. Do not extract one-off helper functions unless they preserve a real boundary, hide meaningful complexity, or are expected to be reused. Prefer inlining simple single-use logic.
+11. Do not guess uncertain information. You may use the MCP service to query the user's local RAG knowledge base.
 <!-- GENERAL CODING GUIDELINES END -->
